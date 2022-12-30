@@ -53,16 +53,22 @@ Code zxingReadBarcode(
   required int width,
   required int height,
   Params? params,
-}) =>
-    bindings
-        .readBarcode(
-          bytes.allocatePointer(),
-          params?.format ?? Format.any,
-          width,
-          height,
-          params?.cropWidth ?? 0,
-          params?.cropHeight ?? 0,
-          params?.tryHarder ?? false ? 1 : 0,
-          params?.tryRotate ?? true ? 1 : 0,
-        )
-        .toCode();
+}) {
+  final Pointer<Int8> blob = malloc.allocate<Int8>(bytes.length);
+  final Int8List blobBytes = blob.asTypedList(bytes.length);
+  blobBytes.setAll(0, bytes);
+  final Code result = bindings
+      .readBarcode(
+    blob.cast<Char>(),
+    params?.format ?? Format.any,
+    width,
+    height,
+    params?.cropWidth ?? 0,
+    params?.cropHeight ?? 0,
+    params?.tryHarder ?? false ? 1 : 0,
+    params?.tryRotate ?? true ? 1 : 0,
+  ).toCode();
+  malloc.free(blob);
+  return result;
+}
+
